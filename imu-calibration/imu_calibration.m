@@ -45,25 +45,67 @@ end
 
 % t0 = 1 / samplePeriod;
 
+% Allan Variance plot for Gyro
+
 for i = 1 : length(J)
 
-	disp(['Computing i=',num2str(i)]);
+	sumTheta = [0; 0; 0];
 
-	sumTheta = 0;
+	for gyroAxis = 1 : 3
 
-	for k = 1 : dataNum - 2 * n(i)
+		for k = 1 : dataNum - 2 * n(i)
 
-		sumTheta = sumTheta + (angularRate(k+2*n(i),1) - 2 * angularRate(k+n(i),1) + angularRate(k,1))^2;
+			sumTheta(gyroAxis,1) = sumTheta(gyroAxis,1) + (angularRate(k+2*n(i),gyroAxis) - 2 * angularRate(k+n(i),gyroAxis) + angularRate(k,gyroAxis))^2;
+
+		end
+
+		sigmaGyro(i,gyroAxis) = sumTheta(gyroAxis,1) / (2 * (n(i) * samplePeriod) * (n(i) * samplePeriod) * (dataNum - 2 * n(i)));
+		sigmaGyro(i,gyroAxis) = sqrt(sigmaGyro(i,gyroAxis));
 
 	end
-
-	sigma(i) = sumTheta / (2 * (n(i) * samplePeriod) * (n(i) * samplePeriod) * (dataNum - 2 * n(i)));
-
-	sigma(i) = sqrt(sigma(i));
-
-
+	
 end
 
+figure('Number','off','Name','Allan Deviation plot for Gyroscope')
+hold on;
+set(gca, 'XScale', 'log', 'YScale', 'log');
 grid on;
-loglog(n*samplePeriod,sigma);
+loglog(n*samplePeriod,sigmaGyro(:,1), 'r-');
+loglog(n*samplePeriod,sigmaGyro(:,2), 'g-');
+loglog(n*samplePeriod,sigmaGyro(:,3), 'b-');
+title('Allan Variance plot for Gyroscope');
+legend('Gyro-X','Gyro-Y','Gyro-Z');
+
+
+% Allan Variance plot for Acc
+
+for i = 1 : length(J)
+
+	sumTheta = [0; 0; 0];
+
+	for accAxis = 1 : 3
+
+		for k = 1 : dataNum - 2 * n(i)
+
+			sumTheta(accAxis,1) = sumTheta(accAxis,1) + (velocity(k+2*n(i),accAxis) - 2 * velocity(k+n(i),accAxis) + velocity(k,accAxis))^2;
+
+		end
+
+		sigmaAcc(i,accAxis) = sumTheta(accAxis,1) / (2 * (n(i) * samplePeriod) * (n(i) * samplePeriod) * (dataNum - 2 * n(i)));
+		sigmaAcc(i,accAxis) = sqrt(sigmaAcc(i,accAxis));
+
+	end
+	
+end
+
+figure('Number','off','Name','Allan Deviation plot for Accelerometer')
+hold on;
+set(gca, 'XScale', 'log', 'YScale', 'log');
+grid on;
+loglog(n*samplePeriod,sigmaAcc(:,1), 'r-');
+loglog(n*samplePeriod,sigmaAcc(:,2), 'g-');
+loglog(n*samplePeriod,sigmaAcc(:,3), 'b-');
+title('Allan Variance plot for Accelerometer');
+legend('Acc-X','Acc-Y','Acc-Z');
+
 
